@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Construir desde la operación | Esteban Salinas</title>
+
+<style>
+:root{
+--bg:#070b11;
+--panel:rgba(255,255,255,.06);
+--line:rgba(255,255,255,.12);
+--text:#ffffff;
+--muted:#9fa7b5;
+--accent:#9fd9ff;
+--blur:24px;
+--shadow:0 40px 80px rgba(0,0,0,.55);
+--max:1300px;
+}
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+scroll-behavior:smooth;
+}
+
+body{
+font-family:Inter,Segoe UI,sans-serif;
+background:
+radial-gradient(circle at 10% 10%,rgba(116,173,255,.10),transparent 30%),
+radial-gradient(circle at 90% 70%,rgba(255,255,255,.04),transparent 30%),
+linear-gradient(180deg,#05080d,#0b1119,#121926);
+color:var(--text);
+overflow-x:hidden;
+}
+
+/* ORBS */
+.orb{
+position:fixed;
+border-radius:50%;
+filter:blur(140px);
+opacity:.16;
+pointer-events:none;
+}
+.orb1{
+width:520px;height:520px;
+background:#67b9ff;
+top:-120px;left:-80px;
+animation:float1 14s ease infinite;
+}
+.orb2{
+width:420px;height:420px;
+background:#ffffff;
+right:-100px;bottom:-60px;
+animation:float2 18s ease infinite;
+}
+@keyframes float1{50%{transform:translate(40px,60px);}}
+@keyframes float2{50%{transform:translate(-50px,-80px);}}
+
+/* GRID EFFECT */
+body::before{
+content:"";
+position:fixed;
+inset:0;
+background:linear-gradient(90deg,transparent,rgba(255,255,255,.015),transparent);
+background-size:250px;
+animation:grid 16s linear infinite;
+pointer-events:none;
+}
+@keyframes grid{
+100%{transform:translateX(250px);}
+}
+
+/* MOUSE LIGHT */
+body::after{
+content:"";
+position:fixed;
+inset:0;
+background:radial-gradient(circle at var(--x,50%) var(--y,50%), rgba(159,217,255,.08), transparent 40%);
+pointer-events:none;
+}
+
+/* LAYOUT */
+section{
+width:min(92%,var(--max));
+margin:auto;
+padding:110px 0;
+}
+
+/* Ocultar sección inicialmente */
+#casos { display: none; }
+
+/* HERO */
+.hero-box{
+padding:60px;
+border-radius:40px;
+background:var(--panel);
+backdrop-filter:blur(var(--blur));
+border:1px solid var(--line);
+box-shadow:var(--shadow);
+position:relative;
+overflow:hidden;
+}
+
+.badge{
+display:inline-flex;
+padding:10px 18px;
+border-radius:999px;
+background:rgba(255,255,255,.06);
+border:1px solid rgba(255,255,255,.12);
+color:var(--accent);
+font-size:13px;
+letter-spacing:2px;
+text-transform:uppercase;
+}
+
+h1{
+margin-top:22px;
+font-size:clamp(40px, 8vw, 112px);
+line-height:.92;
+letter-spacing:-4px;
+}
+
+.typed{display:block;color:var(--accent);min-height:1.4em;}
+.static{display:block;}
+
+.sub{
+margin-top:24px;
+max-width:760px;
+font-size:22px;
+color:var(--muted);
+line-height:1.7;
+}
+
+.flow{
+margin-top:36px;
+display:flex;
+flex-wrap:wrap;
+gap:14px;
+}
+
+.flow span{
+padding:12px 18px;
+background:rgba(255,255,255,.05);
+border:1px solid rgba(255,255,255,.10);
+border-radius:999px;
+}
+
+.cta{
+margin-top:46px;
+display:inline-flex;
+padding:18px 32px;
+border-radius:18px;
+color:#000;
+font-weight:700;
+text-decoration:none;
+background:white;
+cursor: pointer;
+}
+
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+gap:26px;
+}
+
+.card{
+padding:34px;
+background:var(--panel);
+border:1px solid var(--line);
+border-radius:28px;
+cursor:pointer;
+transition:.3s;
+position:relative;
+}
+
+.card:hover{
+transform:translateY(-10px);
+border-color:#fff;
+}
+
+.kicker{
+font-size:12px;
+letter-spacing:2px;
+color:var(--accent);
+margin-bottom:18px;
+}
+
+.card h2{font-size:30px;margin-bottom:18px;}
+.card p{color:var(--muted);line-height:1.8;}
+
+.metric{
+margin-top:18px;
+display:flex;
+justify-content:space-between;
+font-weight:600;
+}
+.metric .value{color:var(--accent);}
+
+/* OVERLAY */
+.overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.78);
+backdrop-filter:blur(10px);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:999;
+}
+
+.sim{
+width:min(700px,92%);
+padding:40px;
+border-radius:30px;
+background:rgba(15,20,30,.95);
+border:1px solid rgba(255,255,255,.15);
+position:relative;
+}
+
+.sim-title{
+color:var(--accent);
+font-size:12px;
+letter-spacing:2px;
+margin-bottom:20px;
+}
+
+.close{
+position:absolute;
+top:15px;
+right:20px;
+cursor:pointer;
+font-size:18px;
+color:white;
+}
+
+.log{
+font-family:monospace;
+font-size:14px;
+margin:6px 0;
+opacity:0;
+animation:fade .3s forwards;
+}
+
+@keyframes fade{
+to{opacity:1;}
+}
+
+@media (max-width: 768px) {
+    h1 { font-size: 40px; }
+    .hero-box { padding: 40px 20px; }
+}
+
+/* ===== TARJETA MUNDIAL (NUEVA) ===== */
+
+.game-container{
+text-align:center;
+}
+
+.area-btn{
+display:block;
+width:100%;
+padding:15px;
+margin:10px 0;
+background:rgba(255,255,255,.1);
+border:1px solid var(--accent);
+color:white;
+border-radius:10px;
+cursor:pointer;
+transition:.25s;
+}
+
+.area-btn:hover{
+transform:translateY(-3px);
+background:rgba(255,255,255,.14);
+}
+
+#gameUI{
+animation:fade .4s forwards;
+}
+
+/* ===========================
+SIMULACIÓN POWER BI IMMERSIVA
+===========================*/
+
+.pb-card{
+position:relative;
+overflow:hidden;
+padding:28px;
+border-radius:28px;
+background:rgba(18,24,38,.92);
+border:1px solid rgba(255,255,255,.08);
+}
+
+.pb-card:before{
+content:"";
+position:absolute;
+top:-240px;
+left:-240px;
+width:500px;
+height:500px;
+background:
+conic-gradient(
+transparent,
+rgba(111,210,255,.35),
+transparent);
+animation:pbRotate 8s linear infinite;
+}
+
+.pb-card:after{
+content:"";
+position:absolute;
+inset:2px;
+border-radius:26px;
+background:#101722;
+}
+
+.pb-content{
+position:relative;
+z-index:5;
+}
+
+.pb-small{
+font-size:12px;
+letter-spacing:2px;
+color:#84d9ff;
+margin-bottom:8px;
+}
+
+.pb-title{
+font-size:32px;
+font-weight:bold;
+margin-bottom:5px;
+}
+
+.pb-sub{
+color:#8ea4b7;
+margin-bottom:22px;
+}
+
+.pb-score{
+font-size:64px;
+font-weight:bold;
+color:#7fd7ff;
+}
+
+.pb-bar{
+margin-top:16px;
+height:12px;
+border-radius:999px;
+background:#233448;
+overflow:hidden;
+}
+
+.pb-fill{
+height:100%;
+width:0%;
+background:linear-gradient(90deg,#53b8ff,#74ffd4);
+transition:1s;
+}
+
+.pb-radar {
+  margin: 15px auto; /* Reducido el margen vertical de 25px a 15px */
+  width: 110px;      /* Reducido de 170px */
+  height: 110px;     /* Reducido de 170px */
+  border-radius: 50%;
+  border: 1px solid rgba(127,210,255,.30);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.pb-radar:before {
+  content: "";
+  position: absolute;
+  width: 75px;       /* Reducido proporcionalmente de 115px */
+  height: 75px;      /* Reducido proporcionalmente de 115px */
+  border-radius: 50%;
+  border: 1px solid rgba(127,210,255,.25);
+}
+
+.pb-radar:after {
+  content: "";
+  position: absolute;
+  width: 40px;       /* Reducido proporcionalmente de 60px */
+  height: 40px;      /* Reducido proporcionalmente de 60px */
+  border-radius: 50%;
+  border: 1px solid rgba(127,210,255,.20);
+}
+
+.pb-scan {
+  position: absolute;
+  width: 2px;
+  height: 55px;      /* Reducido de 82px para que no sobresalga del nuevo radio */
+  background: #8edbff;
+  transform-origin: bottom;
+  animation: scan 2.6s linear infinite;
+  box-shadow: 0 0 15px #8edbff;
+}
+
+
+.pb-spark{
+
+margin-top:20px;
+
+display:flex;
+
+align-items:flex-end;
+
+height:75px;
+
+gap:6px;
+
+}
+
+.pb-spark div{
+
+flex:1;
+
+border-radius:8px 8px 0 0;
+
+background:linear-gradient(#90deff,#35a9ff);
+
+transition:.6s;
+
+}
+
+/* Alturas iniciales diferentes */
+
+.pb-spark div:nth-child(1){height:22%;}
+.pb-spark div:nth-child(2){height:48%;}
+.pb-spark div:nth-child(3){height:78%;}
+.pb-spark div:nth-child(4){height:38%;}
+.pb-spark div:nth-child(5){height:90%;}
+.pb-spark div:nth-child(6){height:60%;}
+.pb-spark div:nth-child(7){height:72%;}
+.pb-spark div:nth-child(8){height:30%;}
+
+
+.pb-status{
+
+margin-top:25px;
+
+padding:15px;
+
+border-radius:14px;
+
+background:rgba(255,255,255,.05);
+
+}
+
+.pb-footer{
+
+display:flex;
+
+justify-content:space-between;
+
+margin-top:20px;
+
+font-size:13px;
+
+color:#8ea4b7;
+
+}
+
+@keyframes pbRotate{
+100%{
+transform:rotate(360deg);
+}
+}
+
+@keyframes pbPulse{
+0%{height:20%;}
+50%{height:95%;}
+100%{height:35%;}
+}
+
+@keyframes scan{
+100%{
+transform:rotate(360deg);
+}
+}
+
+
+/* ==========================================
+SIMULACIÓN 06
+CONTROL DE LEGALIDAD IA
+========================================== */
+
+.legal-card{
+
+position:relative;
+overflow:hidden;
+padding:30px;
+border-radius:28px;
+background:rgba(18,24,38,.92);
+border:1px solid rgba(255,255,255,.08);
+
+}
+
+.legal-card:before{
+
+content:"";
+position:absolute;
+top:-220px;
+left:-220px;
+width:480px;
+height:480px;
+
+background:
+conic-gradient(
+transparent,
+rgba(111,210,255,.22),
+transparent);
+
+animation:pbRotate 9s linear infinite;
+
+}
+
+.legal-card:after{
+
+content:"";
+position:absolute;
+inset:2px;
+border-radius:26px;
+background:#101722;
+
+}
+
+.legal-content{
+
+position:relative;
+z-index:5;
+
+}
+
+.legal-small{
+
+font-size:12px;
+letter-spacing:2px;
+color:#84d9ff;
+margin-bottom:10px;
+
+}
+
+.legal-title{
+
+font-size:31px;
+font-weight:bold;
+
+}
+
+.legal-sub{
+
+margin-top:6px;
+margin-bottom:25px;
+color:#8ea4b7;
+
+}
+
+.legal-status{
+
+padding:18px;
+border-radius:16px;
+background:rgba(255,255,255,.05);
+border:1px solid rgba(255,255,255,.06);
+text-align:center;
+font-size:18px;
+margin-bottom:22px;
+
+}
+
+.legal-progress{
+
+height:12px;
+background:#223347;
+border-radius:999px;
+overflow:hidden;
+margin-bottom:22px;
+
+}
+
+.legal-fill{
+
+height:100%;
+width:0%;
+border-radius:999px;
+background:linear-gradient(90deg,#53b8ff,#74ffd4);
+transition:.45s;
+
+}
+
+.legal-mic{
+
+width:95px;
+height:95px;
+border:none;
+border-radius:50%;
+cursor:pointer;
+font-size:40px;
+background:linear-gradient(135deg,#45a9ff,#5ad9ff);
+color:white;
+transition:.35s;
+display:flex;
+justify-content:center;
+align-items:center;
+margin:25px auto;
+
+}
+
+.legal-mic:hover{
+
+transform:scale(1.08);
+
+}
+
+.legal-mic.listening{
+
+animation:pulseMic .9s infinite;
+
+}
+
+@keyframes pulseMic{
+
+0%{
+
+transform:scale(1);
+
+box-shadow:0 0 0 rgba(80,190,255,.7);
+
+}
+
+50%{
+
+transform:scale(1.08);
+
+box-shadow:0 0 30px rgba(80,190,255,.75);
+
+}
+
+100%{
+
+transform:scale(1);
+
+box-shadow:0 0 0 rgba(80,190,255,.7);
+
+}
+
+}
+
+.legal-response{
+
+margin-top:25px;
+padding:20px;
+border-radius:16px;
+background:rgba(255,255,255,.05);
+display:none;
+
+}
+
+.legal-response h3{
+
+margin-bottom:15px;
+color:#9fd9ff;
+
+}
+
+.legal-item{
+
+display:flex;
+gap:10px;
+margin:10px 0;
+font-size:15px;
+
+}
+
+.legal-footer{
+
+display:flex;
+justify-content:space-between;
+margin-top:25px;
+font-size:13px;
+color:#8ea4b7;
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<section class="hero">
+<div class="hero-box">
+
+<div class="badge">PORTAFOLIO INTERACTIVO</div>
+
+<h1>
+<span class="typed" id="typing"></span>
+<span class="static">Esteban Salinas</span>
+</h1>
+
+<div class="sub">
+Construyo soluciones desde datos, automatización y experiencia operativa.
+</div>
+
+<div class="flow">
+<span>SQL</span>
+<span>Databricks</span>
+<span>Power Automate</span>
+<span>Python RPA</span>
+</div>
+
+<a class="cta" onclick="mostrarSeccion()">Explorar simulaciones</a>
+</div>
+</section>
+
+<section id="casos">
+<div class="grid">
+<div class="card" onclick="run('data')">
+<div class="kicker">SIMULACIÓN 01</div>
+<h2>Calidad de información</h2>
+<p>SQL + Databricks + modelo Levenshtein</p>
+<div class="metric">
+<div>Consistency</div>
+<div class="value">94%</div>
+</div>
+</div>
+
+<div class="card" onclick="run('flow')">
+<div class="kicker">SIMULACIÓN 02</div>
+<h2>Experiencia operativa</h2>
+<p>Power Automate + Teams + notificaciones</p>
+<div class="metric">
+<div>Time Saved</div>
+<div class="value">42%</div>
+</div>
+</div>
+
+<div class="card" onclick="run('rpa')">
+<div class="kicker">SIMULACIÓN 03</div>
+<h2>Automatización aplicada</h2>
+<p>Python RPA + análisis de datos</p>
+<div class="metric">
+<div>Efficiency</div>
+<div class="value">55%</div>
+</div>
+</div>
+
+<div class="card" onclick="run('mundial')">
+<div class="kicker">SIMULACIÓN 04</div>
+
+<h2>Mundial Corporativo</h2>
+
+<p>Simulador de desempeño por áreas</p>
+
+<div class="metric">
+<div>Performance</div>
+<div class="value">LIVE</div>
+</div>
+
+</div>
+
+<div class="card" onclick="run('powerbi')">
+
+<div class="kicker">SIMULACIÓN 05</div>
+
+<h2>Analítica y Reportería</h2>
+
+<p>Power BI + KPIs + Dashboard Ejecutivo</p>
+
+<div class="metric">
+<div>Insights</div>
+<div class="value">LIVE</div>
+</div>
+
+</div>
+
+<div class="card" onclick="run('legal')">
+
+<div class="kicker">SIMULACIÓN 06</div>
+
+<h2>Control de Legalidad</h2>
+
+<p>IA + Reconocimiento de Voz + Validación Registral</p>
+
+<div class="metric">
+<div>AI Assistant</div>
+<div class="value">LIVE</div>
+</div>
+
+</div>
+
+</div>
+</section>
+
+<div class="overlay" id="overlay" onclick="closeSim(event)">
+<div class="sim">
+<div class="close" onclick="closeSim(event)">✕</div>
+<div class="sim-title" id="title"></div>
+<div id="log"></div>
+</div>
+</div>
+
+<script>
+/* Forzar inicio al tope */
+window.history.scrollRestoration = 'manual';
+window.scrollTo(0, 0);
+
+/* Mostrar sección casos */
+function mostrarSeccion() {
+    const s = document.getElementById('casos');
+    s.style.display = 'block';
+    s.scrollIntoView({ behavior: 'smooth' });
+}
+
+/* typing */
+const phrases=["Construyo soluciones desde datos", "Automatizo procesos reales", "Transformo operación en sistemas", "Optimizo experiencia operativa"];
+let i=0;
+const typingEl = document.getElementById("typing");
+setInterval(()=>{
+    typingEl.innerText=phrases[i];
+    i=(i+1)%phrases.length;
+},4000);
+typingEl.innerText = phrases[0];
+
+/* mouse light */
+document.addEventListener("mousemove",e=>{
+    document.body.style.setProperty("--x",e.clientX+"px");
+    document.body.style.setProperty("--y",e.clientY+"px");
+});
+
+function addLog(text){
+    const el=document.createElement("div"); el.className="log";
+    let icon="•";
+    if(text.includes("SQL")) icon="🗄️";
+    if(text.includes("Databricks")) icon="🧠";
+    if(text.includes("Power")) icon="⚡";
+    if(text.includes("Python")) icon="🐍";
+    if(text.includes("✔")) icon="✔";
+    el.innerText=`${icon} ${text}`;
+    document.getElementById("log").appendChild(el);
+}
+
+function addBlock(k,v){
+    const el=document.createElement("div");
+    el.style.cssText=`display:flex;justify-content:space-between;padding:10px 14px;margin:6px 0;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-family:Segoe UI;font-size:13px;`;
+    el.innerHTML=`<span>${k}</span><span style="color:#9fd9ff;font-weight:600">${v}</span>`;
+    document.getElementById("log").appendChild(el);
+}
+
+
+async function run(type){
+
+const overlay=document.getElementById("overlay");
+const title=document.getElementById("title");
+const log=document.getElementById("log");
+
+overlay.style.display="flex";
+log.innerHTML="";
+
+const wait=(ms)=>new Promise(r=>setTimeout(r,ms));
+
+if(type==="data"){
+
+title.innerText="🧠 DATABRICKS • SQL + LEVENSHTEIN";
+
+addLog("[Databricks] Cluster inicializado...");
+await wait(500);
+
+addLog("[SQL] Consultando registros...");
+await wait(500);
+
+addLog("[Levenshtein] Analizando variaciones...");
+await wait(700);
+
+addBlock("Calle 50 #30-23","vs CLL 50 No 30 23");
+await wait(500);
+
+addBlock("Similarity Score","97.8%");
+await wait(500);
+
+addBlock("Data Quality","94.2% ✔");
+
+}
+
+if(type==="flow"){
+
+title.innerText="⚡ POWER AUTOMATE • TEAMS FLOW";
+
+addLog("[Power Automate] Trigger recibido...");
+await wait(500);
+
+addLog("[Validation] OK ✔");
+await wait(500);
+
+addLog("[Teams] Enviando tarjeta...");
+await wait(700);
+
+addBlock("Canal","Operations");
+
+addBlock("Estado","Enviado ✔");
+
+addBlock("Impacto","-42% tiempo");
+
+}
+
+if(type==="rpa"){
+
+title.innerText="🐍 PYTHON RPA • AUTOMATION";
+
+addLog("[Python] Script iniciado...");
+await wait(500);
+
+addLog("[RPA] Accediendo ERP...");
+await wait(600);
+
+addLog("[Pandas] Procesando datos...");
+await wait(700);
+
+addBlock("Registros","1,284");
+
+addBlock("Workflows","3");
+
+addBlock("Tiempo","18.3s");
+
+addLog("✔ Automatización completada");
+
+}
+
+
+/* ===== NUEVA SIMULACIÓN MUNDIAL ===== */
+
+if(type==="mundial"){
+
+title.innerText="🏆 MUNDIAL CORPORATIVO";
+
+log.innerHTML=`
+
+<div class="game-container">
+
+<p style="color:var(--muted);margin-bottom:25px;">
+Gerente: Árbitro | Esteban: VAR
+</p>
+
+<div id="areaSelector">
+
+<button class="area-btn"
+onclick="jugar('Ventas')">
+
+🇨🇴 Selección Clúster Energía Sostenible
+
+</button>
+
+<button class="area-btn"
+onclick="jugar('Operaciones')">
+
+🇧🇷 Selección Clúster Hábitat Sostenible 
+
+</button>
+
+</div>
+
+
+<div id="gameUI" style="display:none">
+
+<h3 id="areaDisplay"></h3>
+
+<div style="font-size:40px;margin:20px 0;">
+
+Goles:
+<span id="score">0</span>
+
+</div>
+
+<button
+class="area-btn"
+onclick="disparar()">
+
+⚽ Disparar (Resultado)
+
+</button>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+/* ===== POWER BI ===== */
+
+if(type==="powerbi"){
+
+title.innerText="📊 ANALÍTICA Y REPORTERÍA";
+
+log.innerHTML=`
+
+<div class="pb-card">
+
+<div class="pb-content">
+
+<div class="pb-small">
+
+POWER BI LIVE SIMULATION
+
+</div>
+
+<div class="pb-title">
+
+Indicador Operativo
+
+</div>
+
+<div class="pb-sub">
+
+Monitoreando procesos en tiempo real...
+
+</div>
+
+<div class="pb-score" id="pbScore">
+
+87%
+
+</div>
+
+<div class="pb-bar">
+
+<div class="pb-fill" id="pbFill"></div>
+
+</div>
+
+<div class="pb-radar">
+
+<div class="pb-scan"></div>
+
+</div>
+
+<div class="pb-spark">
+
+<div></div>
+<div></div>
+<div></div>
+<div></div>
+<div></div>
+<div></div>
+<div></div>
+<div></div>
+
+</div>
+
+<div class="pb-status" id="pbStatus">
+
+Inicializando modelo predictivo...
+
+</div>
+
+<div class="pb-footer">
+
+<span id="pbMotor">
+
+Databricks
+
+</span>
+
+<span id="pbHora">
+
+--
+
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+powerBIAnimation();
+
+}
+
+/* ===== CONTROL DE LEGALIDAD IA ===== */
+
+if(type==="legal"){
+
+title.innerText="⚖️ CONTROL DE LEGALIDAD IA";
+
+log.innerHTML=`
+
+<div class="legal-card">
+
+<div class="legal-content">
+
+<div class="legal-small">
+
+LEGAL AI ASSISTANT
+
+</div>
+
+<div class="legal-title">
+
+Control de Legalidad
+
+</div>
+
+<div class="legal-sub">
+
+Consulta mediante reconocimiento de voz
+
+</div>
+
+<div class="legal-status" id="legalStatus">
+
+Esperando consulta...
+
+</div>
+
+<div class="legal-progress">
+
+<div class="legal-fill" id="legalFill"></div>
+
+</div>
+
+<button
+class="legal-mic"
+id="legalMic">
+
+🎤
+
+</button>
+
+<div
+class="legal-response"
+id="legalResponse">
+
+<h3>
+
+Resultado
+
+</h3>
+
+<div id="legalResult"></div>
+
+</div>
+
+<div class="legal-footer">
+
+<span id="legalMotor">
+
+IA Registral
+
+</span>
+
+<span id="legalHora">
+
+--
+
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+setTimeout(()=>{
+
+initLegalAI();
+
+},200);
+
+}
+
+
+}
+
+
+/* ===== LÓGICA ORIGINAL DEL MUNDIAL ===== */
+
+let goles=0;
+
+function jugar(area){
+
+document.getElementById("areaSelector").style.display="none";
+
+document.getElementById("gameUI").style.display="block";
+
+document.getElementById("areaDisplay").innerText=
+"Jugando: "+area;
+
+goles=0;
+
+document.getElementById("score").innerText=0;
+
+}
+
+function disparar(){
+
+const chance=Math.random();
+
+if(chance>.3){
+
+goles++;
+
+alert("¡GOOOL! Meta cumplida.");
+
+}else{
+
+alert("¡AUTOGOL! VAR detectó actividad no cumplida.");
+
+}
+
+document.getElementById("score").innerText=goles;
+
+}
+
+let pbInterval;
+
+function powerBIAnimation(){
+
+clearInterval(pbInterval);
+
+const estados=[
+
+"Consultando SQL Server...",
+
+"Ejecutando modelo predictivo...",
+
+"Analizando comportamiento histórico...",
+
+"Calculando KPI...",
+
+"Evaluando desviaciones...",
+
+"Actualizando Dashboard...",
+
+"Generando Insights...",
+
+"Modelo validado ✔"
+
+];
+
+const motores=[
+
+"SQL",
+
+"Databricks",
+
+"Power BI",
+
+"Python",
+
+"Machine Learning"
+
+];
+
+let i=0;
+
+pbInterval=setInterval(()=>{
+
+const valor=Math.floor(Math.random()*18)+82;
+
+document.getElementById("pbScore").innerHTML=valor+"%";
+
+document.getElementById("pbFill").style.width=valor+"%";
+
+document.getElementById("pbStatus").innerHTML=estados[i%estados.length];
+
+document.getElementById("pbMotor").innerHTML=motores[i%motores.length];
+
+document.getElementById("pbHora").innerHTML=
+new Date().toLocaleTimeString();
+
+const barras=document.querySelectorAll(".pb-spark div");
+
+barras.forEach(barra=>{
+
+barra.style.height=(20+Math.random()*75)+"%";
+
+});
+
+i++;
+
+},1800);
+
+}
+
+
+/*=========================================
+SIMULACIÓN 06
+CONTROL DE LEGALIDAD IA
+=========================================*/
+
+let legalVoice;
+
+function initLegalAI(){
+
+const status=document.getElementById("legalStatus");
+const fill=document.getElementById("legalFill");
+const mic=document.getElementById("legalMic");
+const result=document.getElementById("legalResult");
+const panel=document.getElementById("legalResponse");
+const hora=document.getElementById("legalHora");
+
+hora.innerHTML=new Date().toLocaleTimeString();
+
+const SpeechRecognition=
+window.SpeechRecognition||
+window.webkitSpeechRecognition;
+
+if(!SpeechRecognition){
+
+status.innerHTML="❌ Este navegador no soporta reconocimiento de voz.";
+
+mic.disabled=true;
+
+return;
+
+}
+
+const rec=new SpeechRecognition();
+
+rec.lang="es-CO";
+rec.continuous=false;
+rec.interimResults=false;
+rec.maxAlternatives=1;
+
+mic.onclick=()=>{
+
+speechSynthesis.cancel();
+
+const activadorIOS=
+new SpeechSynthesisUtterance("");
+
+speechSynthesis.speak(activadorIOS);
+
+panel.style.display="none";
+
+fill.style.width="5%";
+
+status.innerHTML="🎙️ Escuchando...";
+
+mic.classList.add("listening");
+
+try{
+
+rec.start();
+
+}catch(e){}
+
+};
+
+rec.onresult=(e)=>{
+
+const texto=
+e.results[0][0].transcript
+.toLowerCase();
+
+animacionIA(texto);
+
+};
+
+rec.onerror=(e)=>{
+
+status.innerHTML="❌ "+e.error;
+
+mic.classList.remove("listening");
+
+};
+
+rec.onend=()=>{
+
+mic.classList.remove("listening");
+
+};
+
+function animacionIA(texto){
+
+const pasos=[
+
+["Transcribiendo voz...",20],
+
+["Interpretando consulta...",40],
+
+["Consultando controles...",65],
+
+["Validando normativa...",82],
+
+["Generando respuesta...",100]
+
+];
+
+let i=0;
+
+const timer=setInterval(()=>{
+
+status.innerHTML=pasos[i][0];
+
+fill.style.width=pasos[i][1]+"%";
+
+i++;
+
+if(i===pasos.length){
+
+clearInterval(timer);
+
+mostrarRespuesta(texto);
+
+}
+
+},650);
+
+}
+
+function mostrarRespuesta(texto){
+
+let html="";
+let voz="";
+
+if(
+texto.includes("constitución")||
+texto.includes("constitucion")
+){
+
+html=`
+
+<div class="legal-item">✅ Control de homonimia</div>
+
+<div class="legal-item">✅ Objeto social</div>
+
+<div class="legal-item">✅ Capitales</div>
+
+<div class="legal-item">✅ Firma del representante legal</div>
+
+`;
+
+voz="Según la Superintendencia los controles de legalidad para Constitución son: Control de homonimia, objeto social, capitales y firma del representante legal.";
+
+}
+
+else if(
+texto.includes("nombramiento")
+){
+
+html=`
+
+<div class="legal-item">✅ Órgano competente</div>
+
+<div class="legal-item">✅ Cumple quórum</div>
+
+<div class="legal-item">✅ Cumple convocatoria</div>
+
+<div class="legal-item">✅ Cumple SIPREF</div>
+
+`;
+
+voz="Los controles de legalidad para Nombramiento son: órgano competente, cumple quórum, cumple convocatoria y cumple SIPREF.";
+
+}
+
+else{
+
+html=`
+
+<div class="legal-item">
+
+❌ No encontré ese trámite.
+
+</div>
+
+`;
+
+voz="No encontré ese trámite.";
+
+}
+
+result.innerHTML=html;
+
+panel.style.display="block";
+panel.animate([
+    {opacity:0,transform:"translateY(20px)"},
+    {opacity:1,transform:"translateY(0px)"}
+],{
+    duration:500,
+    easing:"ease-out"
+});
+
+status.innerHTML="✅ Consulta finalizada";
+
+hora.innerHTML=new Date().toLocaleTimeString("es-CO",{
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit"
+});
+
+speechSynthesis.cancel();
+
+legalVoice=
+new SpeechSynthesisUtterance(voz);
+
+legalVoice.lang="es-CO";
+
+legalVoice.rate=1;
+
+legalVoice.pitch=1;
+
+legalVoice.volume=1;
+
+speechSynthesis.speak(legalVoice);
+
+}
+
+}
+
+
+
+const oldClose = closeSim;
+
+closeSim=function(e){
+
+clearInterval(pbInterval);
+
+oldClose(e);
+
+}
+
+function closeSim(e){
+    if(e.target.id==="overlay" || e.target.classList.contains("close"))
+        document.getElementById("overlay").style.display="none";
+}
+</script>
+</body>
+</html>
